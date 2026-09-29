@@ -1,29 +1,23 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Findings } from './components/Findings'
+import { TranscriptEditor } from './components/TranscriptEditor'
+import { useStopSpeechOnUnmount } from './speech/synthesis'
 import { ModelGate } from './components/ModelGate'
 import { Settings } from './components/Settings'
 import { SpeakButton } from './components/SpeakButton'
 import { TopicCard } from './components/TopicCard'
 import { useCoach } from './hooks/useCoach'
 import { speechRecognitionSupported, useSpeechRecognition } from './speech/recognition'
-import { synthesisSupported, useSpeaker, useVoices } from './speech/synthesis'
 import { storageAvailable } from './storage/storage'
 
 export default function App() {
   const coach = useCoach()
   const { prefs, model, turn, analyzing, intro } = coach
   const [showSettings, setShowSettings] = useState(false)
-  const voices = useVoices()
-  const { speak, cancel, speaking } = useSpeaker(voices, prefs.voiceURI, prefs.rate)
-  const rec = useSpeechRecognition(async (text) => {
-    await coach.submitSpeech(text)
-  })
-
-  // Speak each new coach reply automatically; Replay is always available.
-  useEffect(() => {
-    if (turn) speak(turn.analysis.reply)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [turn])
+  // Recognition produces a raw transcript; the user reviews/edits it before it is analysed.
+  const [draft, setDraft] = useState<{ raw: string; edited: string } | null>(null)
+  const rec = useSpeechRecognition((text) => setDraft({ raw: text, edited: text }))
+  useStopSpeechOnUnmount()
 
   const ready = model.status === 'ready'
   const err = coach.error ?? rec.error
@@ -46,7 +40,6 @@ export default function App() {
 
       {!storageAvailable && <p className="rounded-lg bg-amber-500/10 p-3 text-sm text-amber-300">Browser storage is unavailable, so progress will not be saved.</p>}
       {!speechRecognitionSupported() && <p className="rounded-lg bg-amber-500/10 p-3 text-sm text-amber-300">Speech recognition is not supported in this browser. Please use Chrome or Edge.</p>}
-      {!synthesisSupported() && <p className="rounded-lg bg-amber-500/10 p-3 text-sm text-amber-300">Text-to-speech is not available, so you will only see the coach's replies as text.</p>}
 
       {!ready ? (
         <ModelGate status={model.status} pct={model.pct} text={model.text} error={model.error} onLoad={coach.loadModel} />
@@ -58,10 +51,6 @@ export default function App() {
             <section className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
               <p className="text-xs font-semibold tracking-widest text-slate-500">COACH</p>
               <p className="mt-2 text-lg leading-relaxed">{coach.coachText}</p>
-              <div className="mt-3 flex gap-2">
-                <button onClick={() => speak(coach.coachText)} disabled={!synthesisSupported()} className="rounded-md border border-slate-600 px-3 py-1 text-sm hover:bg-slate-800 disabled:opacity-40">▶ Replay</button>
-                {speaking && <button onClick={cancel} className="rounded-md border border-slate-600 px-3 py-1 text-sm hover:bg-slate-800">Stop voice</button>}
-              </div>
             </section>
           )}
 
@@ -69,22 +58,33 @@ export default function App() {
             listening={rec.state === 'listening'}
             disabled={analyzing || !speechRecognitionSupported()}
             status={status}
-            onStart={() => { cancel(); coach.setError(null); rec.start() }}
+            onStart={() => { coach.setError(null); setDraft(null); rec.start() }}
             onStop={rec.stop}
           />
 
           {err && <p role="alert" className="rounded-lg bg-red-500/10 p-3 text-sm text-red-300">{err}</p>}
 
-          {(rec.transcript || turn) && (
+          {rec.state === 'listening' && rec.transcript && (
             <section className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
-              <p className="text-xs font-semibold tracking-widest text-slate-500">YOUR TRANSCRIPT</p>
-              <p className="mt-2 whitespace-pre-wrap text-slate-200">{rec.state === 'listening' || !turn ? rec.transcript : turn.transcript}</p>
+              <p className="text-xs font-semibold tracking-widest text-slate-500">LISTENING…</p>
+              <p className="mt-2 whitespace-pre-wrap text-slate-200">{rec.transcript}</p>
             </section>
           )}
 
-          {turn && !analyzing && (
+          {draft && rec.state !== 'listening' && !analyzing && (
+            <TranscriptEditor
+              raw={draft.raw}
+              edited={draft.edited}
+              disabled={analyzing}
+              onChange={(edited) => setDraft({ ...draft, edited })}
+              onClear={() => setDraft(null)}
+              onAnalyze={() => { const d = draft; void coach.submitSpeech(d.edited, d.raw).then((ok) => { if (ok) setDraft(null) }) }}
+            />
+          )}
+
+          {turn && !analyzing && !draft && (
             <>
-              <Findings turn={turn} mode={prefs.mode} canSpeak={synthesisSupported()} onPlayWord={speak} />
+              <Findings turn={turn} mode={prefs.mode} />
               <div className="flex justify-center">
                 {turn.intro ? null : (
                   <button onClick={coach.nextChallenge} className="rounded-xl bg-emerald-500 px-6 py-3 font-semibold hover:bg-emerald-400">
@@ -98,7 +98,7 @@ export default function App() {
       )}
 
       {showSettings && (
-        <Settings prefs={prefs} voices={voices} onChange={coach.setPrefs} onClear={coach.clearData} onClose={() => setShowSettings(false)} />
+        <Settings prefs={prefs} onChange={coach.setPrefs} onClear={coach.clearData} onClose={() => setShowSettings(false)} />
       )}
     </div>
   )

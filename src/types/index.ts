@@ -15,16 +15,22 @@ export interface Topic {
 }
 
 export interface GrammarFix { original: string; correction: string; explanation: string }
-export interface VocabFix { original: string; better: string; explanation: string }
+export interface VocabFix { original: string; better: string; reason: string }
+export interface Finding { finding: string }
+export interface NaturalFix { original: string; better: string }
+export interface PronunciationWord { word: string; reason: string }
 
+/** Strict analysis schema. Every section may be empty; the UI works with any subset. */
 export interface Analysis {
   grammar: GrammarFix[]
   vocabulary: VocabFix[]
-  fluency: { feedback: string; needsWork: boolean }
-  natural: { original: string; better: string } | null
-  structure: { feedback: string; complete: boolean } | null
-  pronunciationWords: string[]
-  reply: string
+  fluency: Finding[]
+  naturalEnglish: NaturalFix[]
+  communicationStructure: Finding[]
+  pronunciation: PronunciationWord[]
+  overallFeedback: string
+  conversationReply: string
+  nextSpeakingSuggestion: string
 }
 
 export interface FillerCount { word: string; count: number }
@@ -32,8 +38,6 @@ export interface FillerCount { word: string; count: number }
 export interface Prefs {
   mode: Mode
   difficulty: Difficulty | 'any'
-  voiceURI: string | null
-  rate: number
 }
 
 export interface Weaknesses {

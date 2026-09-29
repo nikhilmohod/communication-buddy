@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Analysis, ChatMessage, FillerCount, Prefs, Topic, TopicQueue, Weaknesses } from '../types'
-import { analyzeSpeech } from '../ai/analysis'
+import { analyzeSpeech, emptyAnalysis } from '../ai/analysis'
 import { detectWebGPU, loadEngine } from '../ai/engine'
 import * as store from '../storage/storage'
 import { LOCAL_TOPICS } from '../topics/localTopics'
@@ -10,7 +10,9 @@ import { countFillers, wordCount } from '../utils/fillers'
 
 export type ModelStatus = 'checking' | 'unsupported' | 'idle' | 'loading' | 'ready' | 'error'
 
-export interface Turn { transcript: string; analysis: Analysis; fillers: FillerCount[]; words: number; intro: boolean }
+export interface Turn { transcript: string; rawTranscript: string; analysis: Analysis; fillers: FillerCount[]; words: number; intro: boolean }
+
+const MIN_WORDS = 8 // below this we skip the model and just encourage the user to speak longer
 
 const GREETING =
   "Hi! I'm your English Speaking Coach. Tell me a little about yourself — who you are, where you're from, what you do and what you enjoy. Take your time; there's no rush."
@@ -77,18 +79,31 @@ export function useCoach() {
     return () => { cancelled = true }
   }, [loadModel])
 
-  const submitSpeech = useCallback(async (transcript: string) => {
-    if (busy.current) return
+  /** Analyses the final (edited) transcript. rawTranscript is kept only for display. */
+  const submitSpeech = useCallback(async (transcript: string, rawTranscript: string = transcript): Promise<boolean> => {
+    if (busy.current) return false
+    const words = wordCount(transcript)
+    if (words === 0) {
+      setError("I couldn't hear enough speech. Please try again.")
+      return false
+    }
+    setError(null)
+    if (words < MIN_WORDS) {
+      // Too short for useful feedback: no model call, just encourage a longer answer.
+      const analysis: Analysis = { ...emptyAnalysis(), conversationReply: 'Try speaking for 30–60 seconds so I can give you more useful feedback.' }
+      setTurn({ transcript, rawTranscript, analysis, fillers: countFillers(transcript), words, intro: false })
+      setCoachText(analysis.conversationReply)
+      return true
+    }
     busy.current = true
     setAnalyzing(true)
-    setError(null)
     try {
       const analysis = await analyzeSpeech({ transcript, topic, mode: prefs.mode, history: history.current, intro })
       const fillers = countFillers(transcript)
-      const words = wordCount(transcript)
-      setTurn({ transcript, analysis, fillers, words, intro })
-      setCoachText(analysis.reply)
-      history.current = [...history.current, { role: 'user' as const, content: transcript }, { role: 'assistant' as const, content: analysis.reply }].slice(-6)
+      const reply = analysis.conversationReply || analysis.overallFeedback
+      setTurn({ transcript, rawTranscript, analysis, fillers, words, intro })
+      setCoachText(reply)
+      history.current = [...history.current, { role: 'user' as const, content: transcript }, { role: 'assistant' as const, content: reply }].slice(-6)
       if (intro) {
         store.setIntroDone()
         setIntro(false)
@@ -98,16 +113,18 @@ export function useCoach() {
           sessions: weak.sessions + 1,
           grammar: weak.grammar + (analysis.grammar.length ? 1 : 0),
           vocabulary: weak.vocabulary + (analysis.vocabulary.length ? 1 : 0),
-          fluency: weak.fluency + (analysis.fluency.needsWork ? 1 : 0),
-          filler: weak.filler + (words > 0 && (fillerTotal / words) * 100 >= 4 ? 1 : 0),
-          structure: weak.structure + (analysis.structure && !analysis.structure.complete ? 1 : 0),
+          fluency: weak.fluency + (analysis.fluency.length ? 1 : 0),
+          filler: weak.filler + ((fillerTotal / words) * 100 >= 4 ? 1 : 0),
+          structure: weak.structure + (analysis.communicationStructure.length ? 1 : 0),
         }
         setWeak(next)
         store.saveWeaknesses(next)
       }
+      return true
     } catch (e) {
       console.error(e)
-      setError('Sorry, I could not analyze that. Please try speaking again.')
+      setError(`Sorry, I could not analyze that. Your transcript is kept — press Analyze to try again. (${e instanceof Error ? e.message.slice(0, 160) : 'unknown error'})`)
+      return false
     } finally {
       busy.current = false
       setAnalyzing(false)

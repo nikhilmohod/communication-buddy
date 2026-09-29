@@ -9,7 +9,7 @@ const KEYS = {
   model: 'cb.modelLoaded',
 } as const
 
-export const defaultPrefs: Prefs = { mode: 'conversation', difficulty: 'any', voiceURI: null, rate: 0.85 }
+export const defaultPrefs: Prefs = { mode: 'conversation', difficulty: 'any', }
 export const defaultWeaknesses = (): Weaknesses => ({ grammar: 0, vocabulary: 0, fluency: 0, filler: 0, structure: 0, sessions: 0 })
 
 /** Set when LocalStorage throws (private mode, quota, blocked) so the UI can warn once. */
