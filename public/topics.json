@@ -1,0 +1,132 @@
+[
+  {
+    "id": "r-neighbour",
+    "title": "A memorable neighbour or classmate",
+    "category": "Everyday",
+    "difficulty": "beginner",
+    "prompt": "Tell me about someone you met who left an impression on you. Who were they, what happened, and why do you remember them?",
+    "speaking_goal": "Tell a personal story in the past tense.",
+    "recommended_duration": "1 minute",
+    "skills": [
+      "tenses",
+      "fluency"
+    ]
+  },
+  {
+    "id": "r-tech-change",
+    "title": "A technology that changed your life",
+    "category": "Everyday",
+    "difficulty": "intermediate",
+    "prompt": "Describe a technology that changed how you live or work. What was life like before, and what is different now?",
+    "speaking_goal": "Contrast past and present clearly.",
+    "recommended_duration": "1-2 minutes",
+    "skills": [
+      "tenses",
+      "vocabulary"
+    ]
+  },
+  {
+    "id": "r-standup",
+    "title": "Give a clear daily stand-up",
+    "category": "Workplace",
+    "difficulty": "beginner",
+    "prompt": "Give a two-sentence-per-point stand-up: what you did yesterday, what you will do today, and any blockers.",
+    "speaking_goal": "Be brief and structured.",
+    "recommended_duration": "1 minute",
+    "skills": [
+      "structure",
+      "professional"
+    ]
+  },
+  {
+    "id": "r-handover",
+    "title": "Hand over work to a teammate",
+    "category": "Workplace",
+    "difficulty": "intermediate",
+    "prompt": "You are going on holiday. Explain to a teammate what they need to know to take over your work.",
+    "speaking_goal": "Give complete, ordered instructions.",
+    "recommended_duration": "1-2 minutes",
+    "skills": [
+      "structure",
+      "professional"
+    ]
+  },
+  {
+    "id": "r-scope",
+    "title": "Push back on extra scope",
+    "category": "Professional",
+    "difficulty": "advanced",
+    "prompt": "A stakeholder asks for extra features without extra time. Explain politely why this is a problem and offer options.",
+    "speaking_goal": "Say no constructively.",
+    "recommended_duration": "1-2 minutes",
+    "skills": [
+      "professional",
+      "vocabulary"
+    ]
+  },
+  {
+    "id": "r-root-cause",
+    "title": "Explain a root cause analysis",
+    "category": "Technical",
+    "difficulty": "advanced",
+    "prompt": "Walk through how you would find the root cause of a slow report or failing job, step by step.",
+    "speaking_goal": "Explain investigation steps in order.",
+    "recommended_duration": "2 minutes",
+    "skills": [
+      "structure",
+      "vocabulary"
+    ]
+  },
+  {
+    "id": "r-code-review",
+    "title": "Explain how you review code",
+    "category": "Technical",
+    "difficulty": "intermediate",
+    "prompt": "Explain what you look for when reviewing a teammate’s work and how you give feedback.",
+    "speaking_goal": "Explain criteria and tone.",
+    "recommended_duration": "1-2 minutes",
+    "skills": [
+      "vocabulary",
+      "professional"
+    ]
+  },
+  {
+    "id": "r-strength",
+    "title": "Your greatest strength with evidence",
+    "category": "Interview",
+    "difficulty": "intermediate",
+    "prompt": "Name one strength and prove it with a specific example from your experience.",
+    "speaking_goal": "Claim, example, result.",
+    "recommended_duration": "1-2 minutes",
+    "skills": [
+      "structure",
+      "vocabulary"
+    ]
+  },
+  {
+    "id": "r-five-years",
+    "title": "Where do you see yourself in five years?",
+    "category": "Interview",
+    "difficulty": "beginner",
+    "prompt": "Describe where you want to be in five years and the steps you are taking to get there.",
+    "speaking_goal": "Talk about the future with confidence.",
+    "recommended_duration": "1 minute",
+    "skills": [
+      "grammar",
+      "fluency"
+    ]
+  },
+  {
+    "id": "r-ethics",
+    "title": "A tough ethical choice at work",
+    "category": "Advanced",
+    "difficulty": "advanced",
+    "prompt": "Discuss a situation where doing the right thing is costly. What would you do, and why?",
+    "speaking_goal": "Reason through a dilemma aloud.",
+    "recommended_duration": "2 minutes",
+    "skills": [
+      "structure",
+      "vocabulary"
+    ]
+  }
+]
